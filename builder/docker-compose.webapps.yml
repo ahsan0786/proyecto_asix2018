@@ -22,7 +22,7 @@ services:
     networks:
     - proxy
     deploy:
-      replicas: 2
+      replicas: 1
       labels:
 #       - "traefik.frontend.rule=PathPrefixStrip:/jen"
        - "traefik.frontend.rule=Host:jenkins.docker4all.com"
@@ -42,7 +42,7 @@ services:
     networks:	
     - proxy
     deploy:
-      replicas: 2
+      replicas: 1
       labels:
 #       - "traefik.frontend.rule=PathPrefixStrip:/dns"
        - "traefik.frontend.rule=Host:dns.docker4all.com"
