@@ -48,7 +48,7 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
         // comprueba si existe el servicio
         sh '''
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
-          if [[ "$SERVICES" -eq 0 ]] && [[ "$SERVICES1" -eq 0 ]] ; then
+          if [[ "$SERVICES" -eq 0 ]]; then
 			/home/ubuntu2/proyecto_asix2018/cliente/setup-cert.sh
 			/home/ubuntu2/proyecto_asix2018/cliente/start-traefik.sh
           else
