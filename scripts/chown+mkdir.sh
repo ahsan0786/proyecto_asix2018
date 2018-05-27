@@ -1,7 +1,7 @@
 #/bin/bash
 cd ${HOME}
 sudo rm -r ./proyecto
-git clone https://github.com/ahsan0786/proyecto.git
+git clone https://github.com/ahsan0786/proyecto_asix2018.git
 if [ -d /home/ubuntu/docker/containers/mysql ] && [ -d /home/ubuntu/docker/containers/wordpress ] && [ -d /home/ubuntu/docker/containers/mysql-config ]; then
         sudo rm -r /home/ubuntu/docker/containers/mysql
         sudo rm -r /home/ubuntu/docker/containers/wordpress
