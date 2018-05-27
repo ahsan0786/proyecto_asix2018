@@ -26,7 +26,7 @@ services:
         constraints:
         - node.role == manager
       labels:
-       - "traefik.frontend.rule=Host:traefik.webservices.com"
+       - "traefik.frontend.rule=Host:traefik.docker4all.com"
        - "traefik.docker.network=proxy"
        - "traefik.port=8080"
        - "traefik.enable=true"
