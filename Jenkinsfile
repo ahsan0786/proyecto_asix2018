@@ -60,7 +60,7 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
 			docker config rm traefik_traefik_toml_v2 || true
 			docker secret rm traefik_traefik_cert || true
 			docker secre rm traefik_traefik_key || true
-			cd /home/ubuntu2/proyecto_asix2018/cliente
+			cd ${HOME}/proyecto_asix2018/cliente
 			./setup-cert.sh
 			./start-traefik.sh
           fi
