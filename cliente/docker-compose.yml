@@ -17,7 +17,7 @@ services:
       - proxy
       - db
     ports:
-      - 80:80
+      - 81:80
     volumes:
       - /home/ubuntu/docker/containers/wordpress:/var/www/html
     environment:
