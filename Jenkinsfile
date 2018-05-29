@@ -49,12 +49,21 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
         sh '''
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
+		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then 
                         cd ${HOME}/proyecto_asix2018/cliente
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
                         docker stack deploy -c ./swarmprom/docker-compose.yml mon
-
+		else
+                        cd ${HOME}
+                        git clone https://github.com/ahsan0786/proyecto_asix2018.git
+                        cd ${HOME}/proyecto_asix2018/cliente
+                        docker stack deploy -c docker-compose.traefik.yml traefik
+                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
+                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
+		fi
           else
+                if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
                         docker config rm mon_dockerd_config || true
                         docker config rm mon_node_rules || true
                         docker config rm mon_task_rules || true
@@ -67,7 +76,22 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
                         docker stack deploy -c ./swarmprom/docker-compose.yml mon
-
+                else
+                        cd ${HOME}
+                        git clone https://github.com/ahsan0786/proyecto_asix2018.git
+                        cd ${HOME}/proyecto_asix2018/cliente
+                        docker config rm mon_dockerd_config || true
+                        docker config rm mon_node_rules || true
+                        docker config rm mon_task_rules || true
+                        docker config rm traefik_nginx_conf || true
+                        docker config rm traefik_traefik_toml_v2 || true
+                        docker secret rm traefik_traefik_cert || true
+                        docker secret rm traefik_traefik_key || true
+                        docker network create -d overlay proxy
+                        docker stack deploy -c docker-compose.traefik.yml traefik
+                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
+                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
+                fi
           fi
           '''
         checkout scm
