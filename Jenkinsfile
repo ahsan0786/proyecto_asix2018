@@ -49,20 +49,25 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
         sh '''
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
-			/home/ubuntu2/proyecto_asix2018/cliente/setup-cert.sh
-			/home/ubuntu2/proyecto_asix2018/cliente/start-traefik.sh
+                        cd ${HOME}/proyecto_asix2018/cliente
+                        docker stack deploy -c docker-compose.traefik.yml traefik
+                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
+                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
+
           else
-			docker config rm mon_caddy_config || true
-			docker config rm mon_dockerd_config || true
-			docker config rm mon_node_rules || true
-			docker config rm mon_task_rules || true
-			docker config rm traefik_nginx_conf || true
-			docker config rm traefik_traefik_toml_v2 || true
-			docker secret rm traefik_traefik_cert || true
-			docker secre rm traefik_traefik_key || true
-			cd ${HOME}/proyecto_asix2018/cliente
-			./setup-cert.sh
-			./start-traefik.sh
+                        docker config rm mon_dockerd_config || true
+                        docker config rm mon_node_rules || true
+                        docker config rm mon_task_rules || true
+                        docker config rm traefik_nginx_conf || true
+                        docker config rm traefik_traefik_toml_v2 || true
+                        docker secret rm traefik_traefik_cert || true
+                        docker secret rm traefik_traefik_key || true
+                        docker network create -d overlay proxy
+                        cd ${HOME}/proyecto_asix2018/cliente
+                        docker stack deploy -c docker-compose.traefik.yml traefik
+                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
+                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
+
           fi
           '''
         checkout scm
