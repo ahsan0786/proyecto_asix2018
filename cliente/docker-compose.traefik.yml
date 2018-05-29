@@ -28,7 +28,7 @@ services:
       labels:
        - "traefik.frontend.rule=Host:traefik.webservices.com"
        - "traefik.docker.network=proxy"
-       - "traefik.port=9000"
+       - "traefik.port=8080"
        - "traefik.enable=true"
 
     volumes:
