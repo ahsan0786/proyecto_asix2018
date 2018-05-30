@@ -71,7 +71,6 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
                         docker config rm traefik_traefik_toml_v2 || true
                         docker secret rm traefik_traefik_cert || true
                         docker secret rm traefik_traefik_key || true
-                        docker network create -d overlay proxy
                         cd ${HOME}/proyecto_asix2018/cliente
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
@@ -87,7 +86,6 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
                         docker config rm traefik_traefik_toml_v2 || true
                         docker secret rm traefik_traefik_cert || true
                         docker secret rm traefik_traefik_key || true
-                        docker network create -d overlay proxy
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
                         docker stack deploy -c ./swarmprom/docker-compose.yml mon
