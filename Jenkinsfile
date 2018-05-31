@@ -49,7 +49,8 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
         sh '''
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
-		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then 
+		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
+			docker-compose -v  
                         cd ${HOME}/proyecto_asix2018/cliente
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
