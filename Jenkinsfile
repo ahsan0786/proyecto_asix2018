@@ -50,8 +50,21 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
 		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
-			curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-			chmod +x /usr/local/bin/docker-compose
+			apt-get update -y 
+			apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+			curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+			apt-key fingerprint 0EBFCD88
+			add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+			apt-get update -y
+			apt-get install docker-ce -y
+			apt-cache madison docker-ce
                         cd ${HOME}/proyecto_asix2018/cliente
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
