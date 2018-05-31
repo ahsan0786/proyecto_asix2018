@@ -44,27 +44,20 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
 
   node("docker-prod") {
     stage("Production") {
+  docker.build('nemerosa/jenkins-docker').inside("--volume=/var/run/docker.sock:/var/run/docker.sock --add-host dockerhost:${hostIP}") {
       try {
         // comprueba si existe el servicio
         sh '''
+      HOSTIP=`ip -4 addr show docker0 | grep 'inet ' | awk '{print $2}' | awk -F '/' '{print $1}'`
+      echo HOSTIP=${HOSTIP}
+      echo HOSTIP=${HOSTIP} > host.properties
+
+   def props = readProperties(file: 'host.properties')
+   String hostIP = props.HOSTIP
+   echo "Host IP = ${hostIP}"
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
 		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
-			apt  update -y 
-			apt  install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-			curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-			apt-key fingerprint 0EBFCD88
-			add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-			apt-get update -y
-			apt-get install docker-ce -y
-			apt-cache madison docker-ce
                         cd ${HOME}/proyecto_asix2018/cliente
                         docker stack deploy -c docker-compose.traefik.yml traefik
                         docker stack deploy -c docker-compose.webapps.yml dns-jenkins
@@ -108,7 +101,8 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
           fi
           '''
         checkout scm
-      }catch(e) {
+      }
+    }catch(e) {
         error "Error en el nodo Prod"
       }
     }
