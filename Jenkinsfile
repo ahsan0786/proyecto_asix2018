@@ -102,7 +102,7 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
           '''
         checkout scm
       }
-    }catch(e) {
+    }}catch(e) {
         error "Error en el nodo Prod"
       }
     }
