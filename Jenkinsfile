@@ -50,8 +50,8 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
          SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
 		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
-			apt-get update -y 
-			apt-get install \
+			apt  update -y 
+			apt  install \
     apt-transport-https \
     ca-certificates \
     curl \
