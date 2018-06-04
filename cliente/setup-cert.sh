@@ -11,7 +11,7 @@ fi
 
 # setup a CA cert
 openssl req -new -x509 -days 365 \
-  -subj "/CN=Local CA" \
+  -subj "/CN=Webservices SL" \
   -key "${certdir}/ca-key.pem" \
   -sha256 -out "${certdir}/ca.pem"
 

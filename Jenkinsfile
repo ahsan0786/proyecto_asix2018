@@ -4,7 +4,7 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
     stage("Testing imagenes") {
       try {
         sh " docker run --restart=always --name mysql -p 3307:3306 -v /home/ubuntu/docker/containers/mysql:/var/lib/mysql -e network_mode=proyecto -e MYSQL_ROOT_PASSWORD=Ausias123@@ -d ahsan0786/proyecto_mysql "
-     sh "docker run --rm --name wordpress --link mysql:mysql -p 8081:80 -v /home/ubuntu/docker/containers/wordpress:/var/www/html -e network_mode=proyecto -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=Ausias123@@  -d ahsan0786/proyecto_wordpress"
+     sh "docker run --rm --name wordpress --link mysql:mysql -p 8080:80 -v /home/ubuntu/docker/containers/wordpress:/var/www/html -e network_mode=proyecto -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=Ausias123@@  -d ahsan0786/proyecto_wordpress"
 		}
       catch(e) {
         error "Integration Test failed"
@@ -30,12 +30,12 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
     stage("Testing contenedores") {
       try {
         sh " docker run --restart=always --name mysql -p 3307:3306 -v /home/ubuntu/docker/containers/mysql:/var/lib/mysql -e network_mode=proyecto -e MYSQL_ROOT_PASSWORD=Ausias123@@ -d ahsan0786/proyecto_mysql "
-	sh "docker run --rm --name wordpress --link mysql:mysql -p 8081:80 -v /home/ubuntu/docker/containers/wordpress:/var/www/html -e network_mode=proyecto -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=Ausias123@@  -d ahsan0786/proyecto_wordpress"
+	sh "docker run --rm --name wordpress --link mysql:mysql -p 8080:80 -v /home/ubuntu/docker/containers/wordpress:/var/www/html -e network_mode=proyecto -e WORDPRESS_DB_HOST=mysql -e WORDPRESS_DB_USER=root -e WORDPRESS_DB_PASSWORD=Ausias123@@  -d ahsan0786/proyecto_wordpress"
       } catch(e) {
         error "Staging failed"
       } finally {
 		sh "docker stop mysql wordpress && docker rm mysql|| true"
-	    sh "docker ps -aq | xargs docker rm || true"
+	        sh "docker ps -aq | xargs docker rm || true"
 		sh "docker rmi ahsan0786/proyecto_mysql"
 		sh "docker rmi ahsan0786/proyecto_wordpress"
       }
@@ -44,88 +44,56 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
 
   node("docker-prod") {
     stage("Production") {
-  docker.build('nemerosa/jenkins-docker').inside("--volume=/var/run/docker.sock:/var/run/docker.sock --add-host dockerhost:${hostIP}") {
       try {
         // comprueba si existe el servicio
         sh '''
-      HOSTIP=`ip -4 addr show docker0 | grep 'inet ' | awk '{print $2}' | awk -F '/' '{print $1}'`
-      echo HOSTIP=${HOSTIP}
-      echo HOSTIP=${HOSTIP} > host.properties
+         SERVICES=$(docker service ls --filter name=mysql --quiet | wc -l)
+	 SERVICES1=$(docker service ls --filter name=wordpress --quiet | wc -l)
+	 SERVICES2=$(docker service ls --filter name=portainer --quiet | wc -l)
+          if [[ "$SERVICES" -eq 0 ]] && [[ "$SERVICES1" -eq 0 ]] && [[ "$SERVICES2" -eq 0 ]] ; then
+		docker service create \
+		--replicas 4 \
+  		--network proxy \
+  		--network wordpress-mysql_db \
+  		--name wordpress \
+  		--container-label "traefik.frontend.rule=Host:webservices.com" \
+  		--container-label "traefik.docker.network=proxy" \
+  		--container-label "traefik.port=80" \
+		--container-label "traefik.enable=true" \
+ 		--container-label "traefik.backend.loadbalancer.sticky=true" \
+  		--mount type=bind,source=/home/ubuntu/docker/containers/wordpress,destination=/var/www/html \
+ 	 	--env WORDPRESS_DB_HOST=mysql \
+  		--env WORDPRESS_DB_USER=root \
+  		--env WORDPRESS_DB_PASSWORD=Ausias123@@ \
+  		--env WORDPRESS_DB_NAME=wordpress \
+  		--restart-condition on-failure \
+		 ahsan0786/proyecto_wordpress
 
-   def props = readProperties(file: 'host.properties')
-   String hostIP = props.HOSTIP
-   echo "Host IP = ${hostIP}"
-         SERVICES=$(docker service ls --filter name=wordpress-mysql --quiet | wc -l)
-          if [[ "$SERVICES" -eq 0 ]]; then
-		if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
-                        cd ${HOME}/proyecto_asix2018/cliente
-                        docker stack deploy -c docker-compose.traefik.yml traefik
-                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
-                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
-		else
-                        cd ${HOME}
-                        git clone https://github.com/ahsan0786/proyecto_asix2018.git
-                        cd ${HOME}/proyecto_asix2018/cliente
-                        docker stack deploy -c docker-compose.traefik.yml traefik
-                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
-                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
-		fi
+
+		docker service create \
+	 	--network proxy \
+  		--name portainer \
+  		--publish 9000:9000 \
+  		--replicas=1 \
+  		--constraint 'node.role == manager' \
+  		--mode replicated \
+  		--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+  		--container-label "traefik.frontend.rule=Host:portainer.webservices.com" \
+  		--container-label "traefik.docker.network=proxy" \
+  		--container-label "traefik.port=9000" \
+  		--container-label "traefik.enable=true" \
+  		--restart-condition on-failure \
+  		portainer/portainer
+		docker service create --replicas 1 --name mysql --network proxy --network wordpress-mysql_db --name mysql -p 3306:3306 --mount type=bind,source=/home/ubuntu/docker/containers/mysql,destination=/var/lib/mysql --mount type=bind,source=/home/ubuntu/docker/containers/mysql-config/my.cnf,destination=/etc/mysql/my.cnf -e MYSQL_ROOT_PASSWORD=Ausias123@@ ahsan0786/proyecto_mysql		
           else
-                if [[ -d ${HOME}/proyecto_asix2018/ ]]; then
-                        docker config rm mon_dockerd_config || true
-                        docker config rm mon_node_rules || true
-                        docker config rm mon_task_rules || true
-                        docker config rm traefik_nginx_conf || true
-                        docker config rm traefik_traefik_toml_v2 || true
-                        docker secret rm traefik_traefik_cert || true
-                        docker secret rm traefik_traefik_key || true
-                        cd ${HOME}/proyecto_asix2018/cliente
-                        docker stack deploy -c docker-compose.traefik.yml traefik
-                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
-                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
-                else
-                        cd ${HOME}
-                        git clone https://github.com/ahsan0786/proyecto_asix2018.git
-                        cd ${HOME}/proyecto_asix2018/cliente
-                        docker config rm mon_dockerd_config || true
-                        docker config rm mon_node_rules || true
-                        docker config rm mon_task_rules || true
-                        docker config rm traefik_nginx_conf || true
-                        docker config rm traefik_traefik_toml_v2 || true
-                        docker secret rm traefik_traefik_cert || true
-                        docker secret rm traefik_traefik_key || true
-                        docker stack deploy -c docker-compose.traefik.yml traefik
-                        docker stack deploy -c docker-compose.webapps.yml dns-jenkins
-                        docker stack deploy -c ./swarmprom/docker-compose.yml mon
-                fi
+		docker service update --image ahsan0786/proyecto_mysql mysql
+		docker service update --image ahsan0786/proyecto_wordpress wordpress
           fi
           '''
-        checkout scm
-      }
-    }}catch(e) {
+      }catch(e) {
+        sh "docker service update --rollback  proyecto_mysql"
+	sh "docker service update --rollback  proyecto_wordpress"
         error "Error en el nodo Prod"
       }
     }
   }
- node("backup-hsot") {
-    stage("Mysql backup") {
-      try {
-        // comprueba si existe el servicio
-        sh '''
-         SERVICES=$(docker service ls --filter name=proyecto_mysql --quiet | wc -l)
-          if [[ "$SERVICES" -eq 0 ]]; then
-			docker network rm proyecto || true
-			docker network create --driver overlay --attachable proyecto
-			docker service create --replicas 1 --network proyecto --name proyecto_mysql -p 3307:3306 --mount type=bind,source=/home/ubuntu/docker/containers/mysql,destination=/var/lib/mysql --mount type=bind,source=/home/ubuntu/docker/containers/mysql-config/my2.cnf,destination=/etc/mysql/my.cnf -e MYSQL_ROOT_PASSWORD=Ausias123@@ ahsan0786/proyecto_mysql
-          else
-		docker service update --image ahsan0786/proyecto_mysql proyecto_mysql
-          fi
-          '''
-        checkout scm
-      }catch(e) {
-        sh "docker service update --rollback  proyecto_mysql"
-        error "Error en el nodo Backup-Host"
-      }
-    }
-  }
-
