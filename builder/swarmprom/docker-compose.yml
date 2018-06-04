@@ -126,7 +126,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-
   node-exporter:
     image: stefanprodan/swarmprom-node-exporter:v0.15.2
     networks:
@@ -205,6 +204,11 @@ services:
       placement:
         constraints:
           - node.role == manager
+      labels:
+       - "traefik.frontend.rule=Host:alertas.docker4all.com"
+       - "traefik.docker.network=proxy"
+       - "traefik.port=9094"
+       - "traefik.enable=true"
       resources:
         limits:
           memory: 128M
