@@ -52,7 +52,7 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
 	 SERVICES1=$(docker service ls --filter name=wordpress --quiet | wc -l)
 	 SERVICES2=$(docker service ls --filter name=portainer --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]] && [[ "$SERVICES1" -eq 0 ]] && [[ "$SERVICES2" -eq 0 ]] ; then
-		//docker network create -d overlay wordpress-mysql_db
+		#docker network create -d overlay wordpress-mysql_db
 		docker service create \
 		--replicas 4 \
   		--network proxy \
