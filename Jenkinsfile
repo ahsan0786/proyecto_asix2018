@@ -11,7 +11,6 @@ env.DOCKERHUB_USERNAME = 'ahsan0786'
       }finally {
         sh "docker rm -f wordpress || true"
         sh "docker rm -f mysql || true"
-        sh "docker ps -aq | xargs docker rm || true"
       }
     }
     stage("Publicacion de imagenes") {
