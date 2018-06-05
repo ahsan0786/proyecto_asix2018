@@ -2,7 +2,7 @@
 
 
 certdir="tls"
-host="localhost"
+host="*.docker4all.com"
 mkdir tls
 # setup a CA key
 if [ ! -f "$certdir/ca-key.pem" ]; then
